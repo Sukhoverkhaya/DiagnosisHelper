@@ -5,10 +5,14 @@ using JSON
 
 # JSON.json([2,3])
 
-s="configNEW.json"
+s="configs/configTest.json"
 
 data = JSON.parsefile(s)
 names = data["groupnames"]
 names[3]
 
-data[names[2]]
+t=Vector{Vector{Int64}}[[]]
+d=[]
+a=fill(5, 5)
+push!(d, a)
+push!(d, [1,2,3,4,5,6,7,8])

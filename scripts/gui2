@@ -4,6 +4,7 @@ using JSON
 using CImGui.CSyntax
 using CImGui.CSyntax.CStatic
 using CImGui: ImVec2
+using Gtk
 
 include(joinpath(pathof(ImPlot),"..","..","demo","Renderer.jl"))
 using .Renderer
@@ -16,6 +17,7 @@ mutable struct Vars
     names::Vector{Any}
     check::Vector{Int64}
     test::Vector{Int64}
+    conclusion::String
     
     function Vars()
         file = "configs/configTest.json"
@@ -23,10 +25,12 @@ mutable struct Vars
         names = data["groupnames"]
         check = fill(0,length(names))
         test=[0]
+        conclusion = ""
 
-        new(file, data, names, check, test)
+        new(file, data, names, check, test, conclusion)
     end
 end
+
 
 function ui(v::Vars)
     CImGui.Begin("Menu")
@@ -73,6 +77,8 @@ function ui(v::Vars)
     CImGui.Begin("Conclusion")
         CImGui.SameLine(600)
         if CImGui.Button("Save conclusion")
+            fname=save_dialog_native("Select file", GtkNullContainer(), ("*.doc",))
+            write(fname,v.conclusion)
         end
 
         @cstatic read_only=false (text="\0"^(1024*16-249)) begin
@@ -84,12 +90,14 @@ function ui(v::Vars)
                 end
             end
             CImGui.InputTextMultiline("##source", txt*text, length(text), ImVec2(-1.0, CImGui.GetTextLineHeight() * 16), flags)
+
+            v.conclusion=txt
         end
     CImGui.End
 end
 
 function show_gui()
-    state = Vars()
+    state = Vars();
     Renderer.render(
         ()->ui(state),
         width=850,
@@ -100,4 +108,4 @@ function show_gui()
     return state
 end
 
-show_gui()
+show_gui();
