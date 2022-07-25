@@ -1,22 +1,16 @@
 {
-    "keys":
-    [
+    "keys": [
         "diagnosis",
         "ban"
     ],
-    
-    "groupnames":
-    [
+    "groupnames": [
         "Rhythm groups",
         "Rhythms",
         "Diagnoses"
     ],
-
-    "Rhythm groups":
-    [
+    "Rhythm groups": [
         {
-            "diagnosis":
-            [
+            "diagnosis": [
                 "RG 1",
                 "RG 2",
                 "RG 3",
@@ -24,13 +18,10 @@
                 "All"
             ]
         },
-
         {
-            "ban":
-            [
+            "ban": [
                 {
-                    "RG 1":
-                    [
+                    "RG 1": [
                         "4 Related to RG2",
                         "5 Related to RG3",
                         "6 Related to RG3",
@@ -41,10 +32,8 @@
                         "11 Related to RG4"
                     ]
                 },
-
                 {
-                    "RG 2":
-                    [
+                    "RG 2": [
                         "1 Related to RG1",
                         "2 Related to RG1",
                         "3 Related to RG1",
@@ -57,10 +46,8 @@
                         "11 Related to RG4"
                     ]
                 },
-
                 {
-                    "RG 3":
-                    [
+                    "RG 3": [
                         "1 Related to RG1",
                         "2 Related to RG1",
                         "3 Related to RG1",
@@ -69,10 +56,8 @@
                         "11 Related to RG4"
                     ]
                 },
-
                 {
-                    "RG 4":
-                    [
+                    "RG 4": [
                         "1 Related to RG1",
                         "2 Related to RG1",
                         "3 Related to RG1",
@@ -84,22 +69,17 @@
                         "9 Related to RG3"
                     ]
                 },
-
                 {
-                    "All":
-                    [
+                    "All": [
                         ""
                     ]
                 }
             ]
         }
     ],
-
-    "Rhythms": 
-    [
+    "Rhythms": [
         {
-            "diagnosis":
-            [
+            "diagnosis": [
                 "1 Related to RG1",
                 "2 Related to RG1",
                 "3 Related to RG1",
@@ -112,24 +92,18 @@
                 "10 Related to RG4",
                 "11 Related to RG4"
             ],
-
-            "ban":
-            [
+            "ban": [
                 {
-                    "":
-                    [
+                    "": [
                         ""
                     ]
                 }
             ]
         }
     ],
-
-    "Diagnoses": 
-    [
+    "Diagnoses": [
         {
-            "diagnosis":
-            [
+            "diagnosis": [
                 "Diagnosis 1",
                 "Diagnosis 2",
                 "Diagnosis 3",
@@ -140,12 +114,9 @@
                 "Diagnosis 8",
                 "Diagnosis 9"
             ],
-
-            "ban":
-            [
+            "ban": [
                 {
-                    "":
-                    [
+                    "": [
                         ""
                     ]
                 }
