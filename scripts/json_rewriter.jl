@@ -110,7 +110,6 @@ function rewriter(v::Vrs)
                         JSON.print(f, newdata)
                     end
 
-                    v.filename="configs/rewrited.json"
                     v.data = JSON.parsefile(v.filename)
                     v.all_phrases = all_diagnoses(v.data)
                     v.is_file_loaded = true
@@ -214,7 +213,7 @@ show_rewriter();
 
 
 # s = open_dialog_native("Select file", GtkNullContainer(), ("*.json",))
-# # s="configs/configRewrite.json"
+# # # s="configs/configRewrite.json"
     
 # data = JSON.parsefile(s)
 
