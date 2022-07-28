@@ -12,24 +12,16 @@ using .Renderer
 # include(joinpath(pathof(CImGui), "..", "..", "demo", "demo.jl"))
 
 mutable struct Vars
-    file::String
-    data::Dict{String, Any}
     names::Vector{Any}
     check::Vector{Vector{Int64}}
     conclusion::String
     
     function Vars()
-        file = "configs/configRewrite.json"
-        data = JSON.parsefile(file)
-        names = data["groupnames"]
+        names = []
         check = []
-        for i in 1:length(names)
-            n=length(data[names[i]])
-            push!(check, fill(0,n))
-        end
         conclusion = ""
 
-        new(file, data, names, check, conclusion)
+        new(names, check, conclusion)
     end
 end
 
@@ -74,154 +66,33 @@ function all_diagnoses(data)
     return diagnoses
 end
 
-# function rewriter(p::Vrs)
-#     CImGui.Begin("Change list")
-
-#         if CImGui.Button("Load file.json")
-#             p.filename = open_dialog_native("Select file", GtkNullContainer(), ("*.json",))
-#             if p.filename != ""
-#                 p.data = JSON.parsefile(p.filename)
-#                 p.all_phrases = all_diagnoses(p.data)
-#                 p.is_file_loaded = true
-#             else
-#                 warn_dialog("File was not selected!")
-#                 p.is_file_loaded = false
-#             end
-#         end
-
-#         CImGui.SameLine(575)
-#         if CImGui.Button("Add changes to file.json")
-#             can_whrite = true
-#             # сделать возможность добавления вектора из забаненных фраз!!!!!!!!!!!
-#             if p.newname != "" && p.newdiagnosis != "" && p.newban != "" 
-
-#                 names = p.data["groupnames"]
-#                 is_new=true
-
-#                 for i in 1:length(names)
-#                     if p.newname == names[i]
-#                         is_new = false
-#                     end
-#                 end
-
-#                 if is_new
-#                     entry = Dict(p.newname => ([Dict("diagnosis" => p.newdiagnosis, "ban" => p.newban)]))
-#                     newdata = merge(p.data, entry)
-#                     push!(newdata["groupnames"], p.newname)
-#                 else
-#                     newdata = p.data
-#                     group = newdata[p.newname]
-
-#                     is_new_diagnosis = true
-#                     for i in 1:length(group)
-#                         if group[i]["diagnosis"] == p.newdiagnosis
-#                             is_new_diagnosis = false
-#                         end
-#                     end
-
-#                     if is_new_diagnosis
-#                         push!(newdata[p.newname], Dict("diagnosis" => p.newdiagnosis, "ban" => p.newban))
-#                     else
-#                         warn_dialog("The entered phrase is already in this section")
-#                         can_whrite = false
-#                     end
-#                 end
-
-#                 if can_whrite
-#                     open("configs/rewrited.json", "w") do f
-#                         JSON.print(f, newdata)
-#                     end
-
-#                     p.filename="configs/rewrited.json"
-#                     p.data = JSON.parsefile(p.filename)
-#                     p.all_phrases = all_diagnoses(p.data)
-#                     p.is_file_loaded = true
-#                 end
-
-#                 info_dialog("Changes were added")
-
-#             end
-#         end
-
-#         if p.is_file_loaded
-
-#             ###############################################################
-#             function text_and_combo(title::String, name::String, num::Int64, items::Vector{Any})
-#                 CImGui.Text("Enter a new"*name*"or select an existing one")
-            
-#                 @cstatic str0 = "Write here"*"\0"^50 begin
-#                     CImGui.InputText("", str0, length(str0))
-#                     if p.buf[num] != p.current_item[num]
-#                         str0 = p.current_item[num]*"\0"^50
-#                         p.buf[num] = p.current_item[num]
-#                     end
-#                     p.newname = replace(str0 ,"\0" => "")
-#                 end
-            
-#                 CImGui.SameLine()
-#                 @cstatic item_current="" begin
-#                     if CImGui.BeginCombo(title, item_current, CImGui.ImGuiComboFlags_NoPreview)
-#                         for n = 0:length(items)-1
-#                             is_selected = item_current == items[n+1]
-#                             CImGui.Selectable(items[n+1], is_selected) && (item_current = items[n+1];)
-#                             is_selected && CImGui.SetItemDefaultFocus()
-#                             p.current_item[num] = item_current
-#                         end
-#                         CImGui.EndCombo()
-#                     end
-#                 end
-#             end
-            
-#             ####################################################
-
-#             text_and_combo("Group name", "group name", 1, p.data["groupnames"])
-    
-#             @cstatic str1 = "New phrase"*"\0"^50 begin
-#                 CImGui.InputText("Phrase", str1, length(str1))
-#                 p.newdiagnosis = replace(str1 ,"\0" => "")
-#             end
-
-#             if CImGui.TreeNode("Select a banned phrase(s)")
-#                 CImGui.Text("     *Hold CTRL and click to select multiple items.")
-#                 CImGui.Separator()
-#                 @cstatic selection=fill(false,1000) begin
-#                     for n = 0:length(p.all_phrases)-1
-#                         buf = p.all_phrases[n+1]
-#                         if CImGui.Selectable(buf, selection[n+1])
-#                                # clear selection when CTRL is not held
-#                             !CImGui.GetIO().KeyCtrl && fill!(selection, false)
-#                             selection[n+1] ⊻= 1
-#                         end
-#                     end
-#                     p.newban=p.all_phrases[selection[1:length(p.all_phrases)]]
-#                 end
-#             end
-
-#             #     n = length(v.all_phrases)
-#             #         for i in 1:n
-#             #             @cstatic selected=false begin
-#             #             @c CImGui.Checkbox(v.all_phrases[i], &selected)
-#             #             # v.selected = selected
-#             #         end
-#             #     end
-#             # end
-
-#             # @cstatic str2 = "New banned combination"*"\0"^50 begin
-#             #     CImGui.InputText("Banned combination", str2, length(str2))
-#             #     v.newban = replace(str2 ,"\0" => "")
-#             # end
-
-#         end
-
-#     CImGui.End()
-# end
-
-
 function ui(v::Vars, p::Vrs)
     CImGui.Begin("Menu")
 
+    if CImGui.Button("Load file.json")
+        p.filename = open_dialog_native("Select file", GtkNullContainer(), ("*.json",))
+        if p.filename != ""
+            p.data = JSON.parsefile(p.filename, use_mmap=false)
+
+            v.names = p.data["groupnames"]
+            v.check = []
+            for i in 1:length(v.names)
+                n=length(p.data[v.names[i]])
+                push!(v.check, fill(0,n))
+            end
+
+            p.all_phrases = all_diagnoses(p.data)
+            p.is_file_loaded = true
+        else
+            warn_dialog("File was not selected!")
+            p.is_file_loaded = false
+        end
+    end
+
+    if p.is_file_loaded
+
         if CImGui.TreeNode(v.names[1])
-            groupdata=v.data[v.names[1]]
+            groupdata=p.data[v.names[1]]
             for j in 1:length(groupdata)
                 CImGui.RadioButton(groupdata[j]["diagnosis"], v.check[1][1] == j) && (v.check[1][1] = j;)
             end
@@ -237,14 +108,14 @@ function ui(v::Vars, p::Vrs)
         if is_selected
             for i in 2:length(v.names)
                 if CImGui.TreeNode(v.names[i])
-                    groupdata=v.data[v.names[i]]
+                    groupdata=p.data[v.names[i]]
                     for j in 1:length(groupdata)
 
                         is_banned = false
                         for t in 1:length(v.names)
-                            for p in 1:length(v.check[t])
-                                if v.check[t][p]!=0
-                                    banned = v.data[v.names[t]][v.check[t][p]]["ban"]
+                            for u in 1:length(v.check[t])
+                                if v.check[t][u]!=0
+                                    banned = p.data[v.names[t]][v.check[t][u]]["ban"]
                                     for q in 1:length(banned)      # проверка только по выбранной группе ритмов - нужно добавить такую же по всем выбранным категориям
                                         if groupdata[j]["diagnosis"] == banned[q]
                                             is_banned=true
@@ -274,9 +145,9 @@ function ui(v::Vars, p::Vrs)
             end
         end
 
-    CImGui.End
+     CImGui.End
     
-    CImGui.Begin("Conclusion")
+     CImGui.Begin("Conclusion")
         CImGui.SameLine(600)
         if CImGui.Button("Save conclusion")
             fname=save_dialog_native("Select file", GtkNullContainer(), ("*.doc",))
@@ -289,7 +160,7 @@ function ui(v::Vars, p::Vrs)
             for i in 1:length(v.names)
                 for j in 1:length(v.check[i])
                     if v.check[i][j]!=0
-                        txt*=v.data[v.names[i]][v.check[i][j]]["diagnosis"]*". "
+                        txt*=p.data[v.names[i]][v.check[i][j]]["diagnosis"]*". "
                     end
                 end
             end
@@ -297,21 +168,22 @@ function ui(v::Vars, p::Vrs)
 
             v.conclusion=txt
         end
-    CImGui.End
+     CImGui.End
 
-    CImGui.Begin("Change list")
+     ################################################3
+     CImGui.Begin("Change list")
 
-        if CImGui.Button("Load file.json")
-            p.filename = open_dialog_native("Select file", GtkNullContainer(), ("*.json",))
-            if p.filename != ""
-                p.data = JSON.parsefile(p.filename)
-                p.all_phrases = all_diagnoses(p.data)
-                p.is_file_loaded = true
-            else
-                warn_dialog("File was not selected!")
-                p.is_file_loaded = false
-            end
-        end
+        # if CImGui.Button("Load file.json")
+        #     p.filename = open_dialog_native("Select file", GtkNullContainer(), ("*.json",))
+        #     if p.filename != ""
+        #         p.data = JSON.parsefile(p.filename, use_mmap=false)
+        #         p.all_phrases = all_diagnoses(p.data)
+        #         p.is_file_loaded = true
+        #     else
+        #         warn_dialog("File was not selected!")
+        #         p.is_file_loaded = false
+        #     end
+        # end
 
         CImGui.SameLine(575)
         if CImGui.Button("Add changes to file.json")
@@ -352,14 +224,21 @@ function ui(v::Vars, p::Vrs)
                 end
 
                 if can_whrite
-                    open("configs/rewrited.json", "w") do f
+                    open(p.filename, "w") do f
                         JSON.print(f, newdata)
                     end
 
-                    p.filename="configs/rewrited.json"
-                    p.data = JSON.parsefile(p.filename)
+                    p.data = JSON.parsefile(p.filename, use_mmap=false)
                     p.all_phrases = all_diagnoses(p.data)
                     p.is_file_loaded = true
+
+                    v.names = p.data["groupnames"]
+                    v.check = []
+                    for i in 1:length(v.names)
+                        n=length(p.data[v.names[i]])
+                        push!(v.check, fill(0,n))
+                    end
+
                 end
 
                 info_dialog("Changes were added")
@@ -437,7 +316,8 @@ function ui(v::Vars, p::Vrs)
 
         end
 
-    CImGui.End()
+     CImGui.End()
+    end
 end
 
 function show_gui()
@@ -450,7 +330,7 @@ function show_gui()
         title="",
         hotloading=true
     )
-    return state
+    return state1, state2
 end
 
 show_gui();

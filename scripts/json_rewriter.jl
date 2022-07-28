@@ -58,7 +58,7 @@ function rewriter(v::Vrs)
         if CImGui.Button("Load file.json")
             v.filename = open_dialog_native("Select file", GtkNullContainer(), ("*.json",))
             if v.filename != ""
-                v.data = JSON.parsefile(v.filename)
+                v.data = JSON.parsefile(v.filename, use_mmap=false)
                 v.all_phrases = all_diagnoses(v.data)
                 v.is_file_loaded = true
             else
@@ -106,11 +106,12 @@ function rewriter(v::Vrs)
                 end
 
                 if can_whrite
+
                     open(v.filename, "w") do f
                         JSON.print(f, newdata)
                     end
 
-                    v.data = JSON.parsefile(v.filename)
+                    v.data = JSON.parsefile(v.filename, use_mmap=false)
                     v.all_phrases = all_diagnoses(v.data)
                     v.is_file_loaded = true
                 end
