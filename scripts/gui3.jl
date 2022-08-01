@@ -98,15 +98,31 @@ function ui(v::Vars, p::Vrs)
             end
         end
 
-        is_selected = false
+        is_selected_1 = false
         for i in 1:length(v.check[1])
             if v.check[1][i]!=0
-                is_selected=true
+                is_selected_1=true
             end
         end
 
-        if is_selected
-            for i in 2:length(v.names)
+        if is_selected_1
+            if CImGui.TreeNode(v.names[2])
+                groupdata=p.data[v.names[2]]
+                for j in 1:length(groupdata)
+                    CImGui.RadioButton(groupdata[j]["diagnosis"], v.check[2][1] == j) && (v.check[2][1] = j;)
+                end
+            end
+        end
+
+        is_selected_2 = false
+        for i in 1:length(v.check[2])
+            if v.check[2][i]!=0
+                is_selected_2=true
+            end
+        end
+
+        if is_selected_2
+            for i in 3:length(v.names)
                 if CImGui.TreeNode(v.names[i])
                     groupdata=p.data[v.names[i]]
                     for j in 1:length(groupdata)
