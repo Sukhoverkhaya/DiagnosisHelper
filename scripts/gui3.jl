@@ -5,11 +5,14 @@ using CImGui.CSyntax
 using CImGui.CSyntax.CStatic
 using CImGui: ImVec2
 using Gtk
+using StringEncodings
 
 include(joinpath(pathof(ImPlot),"..","..","demo","Renderer.jl"))
 using .Renderer
 
+
 # include(joinpath(pathof(CImGui), "..", "..", "demo", "demo.jl"))
+
 
 mutable struct Vars
     names::Vector{Any}
@@ -67,7 +70,7 @@ function all_diagnoses(data)
 end
 
 function ui(v::Vars, p::Vrs)
-    CImGui.Begin("Menu")
+    CImGui.Begin("Меню")
 
     if CImGui.Button("Load file.json")
         p.filename = open_dialog_native("Select file", GtkNullContainer(), ("*.json",))
@@ -132,7 +135,7 @@ function ui(v::Vars, p::Vrs)
                             for u in 1:length(v.check[t])
                                 if v.check[t][u]!=0
                                     banned = p.data[v.names[t]][v.check[t][u]]["ban"]
-                                    for q in 1:length(banned)      # проверка только по выбранной группе ритмов - нужно добавить такую же по всем выбранным категориям
+                                    for q in 1:length(banned)     
                                         if groupdata[j]["diagnosis"] == banned[q]
                                             is_banned=true
                                             
@@ -189,22 +192,9 @@ function ui(v::Vars, p::Vrs)
      ################################################3
      CImGui.Begin("Change list")
 
-        # if CImGui.Button("Load file.json")
-        #     p.filename = open_dialog_native("Select file", GtkNullContainer(), ("*.json",))
-        #     if p.filename != ""
-        #         p.data = JSON.parsefile(p.filename, use_mmap=false)
-        #         p.all_phrases = all_diagnoses(p.data)
-        #         p.is_file_loaded = true
-        #     else
-        #         warn_dialog("File was not selected!")
-        #         p.is_file_loaded = false
-        #     end
-        # end
-
         CImGui.SameLine(575)
         if CImGui.Button("Add changes to file.json")
             can_whrite = true
-            # сделать возможность добавления вектора из забаненных фраз!!!!!!!!!!!
             if p.newname != "" && p.newdiagnosis != "" && p.newban != "" 
 
                 names = p.data["groupnames"]
@@ -315,20 +305,6 @@ function ui(v::Vars, p::Vrs)
                     p.newban=p.all_phrases[selection[1:length(p.all_phrases)]]
                 end
             end
-
-            #     n = length(v.all_phrases)
-            #         for i in 1:n
-            #             @cstatic selected=false begin
-            #             @c CImGui.Checkbox(v.all_phrases[i], &selected)
-            #             # v.selected = selected
-            #         end
-            #     end
-            # end
-
-            # @cstatic str2 = "New banned combination"*"\0"^50 begin
-            #     CImGui.InputText("Banned combination", str2, length(str2))
-            #     v.newban = replace(str2 ,"\0" => "")
-            # end
 
         end
 
