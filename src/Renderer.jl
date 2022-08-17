@@ -50,7 +50,15 @@ function init_renderer(width, height, title::AbstractString)
     # CImGui.StyleColorsClassic()
     # CImGui.StyleColorsLight()
 
-    dpi_scale = 1.8
+    # dpi_scale = 1.8
+    mode = glfwGetVideoMode(glfwGetPrimaryMonitor())
+    w = unsafe_load(mode).width
+    h = unsafe_load(mode).height
+
+    dg = sqrt(w^2 + h^2)
+    k = 0.00053
+    dpi_scale = dg*k
+
     style = CImGui.GetStyle()
     CImGui.LibCImGui.ImGuiStyle_ScaleAllSizes(style, dpi_scale)
 

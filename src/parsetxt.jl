@@ -37,7 +37,7 @@ module parsetxt
                     isgroup = false
                 elseif lines != "#" && isgroup == false
                     ln = split(lines, "    ")
-                    if length(ln) == 1
+                    if length(ln) == 1 # если нет отступа
                         if needwrite
                             push!(data[2], List(groupname, children))
                             children = Node[]
@@ -45,7 +45,7 @@ module parsetxt
                         end
                         groupname = split(lines, " - ")[2]
                         needwrite = true
-                    else
+                    else # если есть отступ
                         diagnosis = split(ln[2], " : ")
                         if length(diagnosis) == 1
                             ban = [""]
