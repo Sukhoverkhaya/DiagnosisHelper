@@ -80,6 +80,7 @@
     end
 
     function ui(v::Global)
+        CImGui.StyleColorsLight()
 
         CImGui.SetNextWindowPos(ImVec2(0,0))
         CImGui.SetNextWindowSize(ImVec2(2100,955))
