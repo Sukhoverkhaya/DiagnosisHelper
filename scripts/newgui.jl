@@ -11,6 +11,8 @@ using Static
 include("../src/Renderer.jl")
 using .Renderer
 
+# include(joinpath(pathof(CImGui), "..", "..", "demo", "demo.jl"))
+
 include("../src/parsetxt.jl")
 using .parsetxt
 
@@ -84,7 +86,7 @@ function ui(v::Global)
 
     CImGui.SetNextWindowPos(ImVec2(0,0))
     CImGui.SetNextWindowSize(ImVec2(2100,955))
-    CImGui.Begin("Меню", C_NULL, CImGui.ImGuiWindowFlags_NoScrollbar)
+    CImGui.Begin("Меню")
         if CImGui.Button("Загрузить файл")
             v.filename = open_dialog_native("Выберите файл", GtkNullContainer(), ("*.txt",))
             if isempty(v.filename)
@@ -111,68 +113,74 @@ function ui(v::Global)
             end
             ####
             if CImGui.CollapsingHeader("Группа ритмов")
-                for i in 1:length(v.data[1])
-                    CImGui.BeginChild("Child1", ImVec2(CImGui.GetWindowContentRegionWidth() * 0.4, 100), false, CImGui.ImGuiWindowFlags_HorizontalScrollbar)
-                        if CImGui.Selectable(v.data[1][i].name, pointer(v.current_item[1])+(i-1)*sizeof(Bool))
-                            print(pointer(v.current_item[1])+(i-1)*sizeof(Bool))
-                            # v.is_group_selected = true
-                            
-                            # for j in 2:length(v.current_item)
-                            #     needclean = false
-                            #     for k in 1:length(v.data[2][j-1].children)
-                            #         if v.data[2][j-1].children[k].name == v.current_item[j]
-                            #             needclean = (typeof(findfirst(x -> x == v.data[1][i].code, v.data[2][j-1].children[k].ban)) != Nothing)
-                            #         end
-                            #     end
-                            #     if needclean
-                            #         v.current_item[j] = ""
-                            #     end
-                            # end
-                            # v.final = makeconclusion(v)
+                CImGui.BeginChild(1, ImVec2(CImGui.GetWindowContentRegionWidth(), 100), false, CImGui.ImGuiWindowFlags_HorizontalScrollbar)
+                    for i in 1:length(v.data[1])-3
+                            if CImGui.Selectable(v.data[1][i].name, pointer(v.current_item[1])+(i-1)*sizeof(Bool))
+                                v.is_group_selected = true
+                                for j in 1:length(v.current_item[1])
+                                    if j != i
+                                        v.current_item[1][j] = false
+                                    end
+                                end
+                                ### сделать функцией, чтобы можно было юзать в двух местах (для тех трёх диагнозов)
+                                # for j in 2:length(v.current_item)
+                                #     needclean = false
+                                #     for k in 1:length(v.data[2][j-1].children)
+                                #         if v.data[2][j-1].children[k].name == v.current_item[j]
+                                #             needclean = (typeof(findfirst(x -> x == v.data[1][i].code, v.data[2][j-1].children[k].ban)) != Nothing)
+                                #         end
+                                #     end
+                                #     if needclean
+                                #         v.current_item[j] = ""
+                                #     end
+                                # end
+                                # v.final = makeconclusion(v)
+                            end
+                        if v.current_item[1][i]
+                            CImGui.SetItemDefaultFocus()
                         end
-                    CImGui.EndChild()
-                    if v.current_item[1][i]
-                        CImGui.SetItemDefaultFocus()
                     end
-                end
+                CImGui.EndChild()
             end
-
         end
 
         if v.is_group_selected
             for i in 1:length(v.data[2])
-                if CImGui.BeginCombo(v.data[2][i].name, v.current_item[i+1])
-                    for j in 1:length(v.data[2][i].children)
-                        is_banned = false
-                        for k in 1:length(v.data[1])
-                            if v.data[1][k].name == v.current_item[1]
-                                is_banned = (typeof(findfirst(x -> x == v.data[1][k].code, v.data[2][i].children[j].ban)) != Nothing)
-                            end
+                    if CImGui.CollapsingHeader(v.data[2][i].name)
+                        #### перенести на плюсы
+                        if typeof(findfirst(x -> x == true, v.current_item[i+1])) != Nothing
+                            CImGui.PushID(v.data[2][i].name)
+                                if CImGui.SmallButton("очистить поле")
+                                    v.current_item[i+1] = fill(false, length(v.current_item[i+1]))
+                                end
+                            CImGui.PopID()
                         end
-                        isselected = (v.data[2][i].children[j].name == v.current_item[i+1])
-                        if !is_banned
-                            if CImGui.Selectable(v.data[2][i].children[j].name, isselected)
-                                v.current_item[i+1] = v.data[2][i].children[j].name
-                                v.final = makeconclusion(v)
+                        ####
+                        CImGui.BeginChild(i+1, ImVec2(CImGui.GetWindowContentRegionWidth(), 100), false, CImGui.ImGuiWindowFlags_HorizontalScrollbar)
+                            for j in 1:length(v.data[2][i].children)
+                                not_banned = false
+                                for k in 1:length(v.current_item[1])
+                                    if v.current_item[1][k]
+                                        not_banned = (typeof(findfirst(x -> x == v.data[1][k].code, v.data[2][i].children[j].ban)) != Nothing)
+                                    end
+                                end
+                                
+                                if !not_banned
+                                    if CImGui.Selectable(v.data[2][i].children[j].name, pointer(v.current_item[i+1])+(j-1)*sizeof(Bool))
+                                        # v.final = makeconclusion(v)
+                                        for k in length(v.data[1]):-1:length(v.data[1])-2
+                                            if v.data[2][i].children[j].name == v.data[1][k].name
+                                                v.current_item[1][k] = v.current_item[i+1][j]
+                                            end
+                                        end
+                                    end
+                                    if v.current_item[i+1][j]
+                                        CImGui.SetItemDefaultFocus()
+                                    end
+                                end
                             end
-                            if isselected
-                                CImGui.SetItemDefaultFocus()
-                            end
-                        end
+                        CImGui.EndChild()
                     end
-                    CImGui.EndCombo()
-                end
-                #### перенести на плюсы
-                if v.current_item[i+1] != ""
-                    CImGui.PushID(v.data[2][i].name)
-                        CImGui.SameLine()
-                        if CImGui.SmallButton("очистить поле")
-                            v.current_item[i+1] = ""
-                            v.final = makeconclusion(v)
-                        end
-                    CImGui.PopID()
-                end
-                ####
             end
         end
 
