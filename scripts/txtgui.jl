@@ -82,8 +82,8 @@
     function ui(v::Global)
 
         CImGui.SetNextWindowPos(ImVec2(0,0))
-        CImGui.SetNextWindowSize(ImVec2(2100,1000))
-        CImGui.Begin("Меню")
+        CImGui.SetNextWindowSize(ImVec2(2100,955))
+        CImGui.Begin("Меню", C_NULL, CImGui.ImGuiWindowFlags_NoScrollbar)
             if CImGui.Button("Загрузить файл")
                 v.filename = open_dialog_native("Выберите файл", GtkNullContainer(), ("*.txt",))
                 if isempty(v.filename)
@@ -97,12 +97,14 @@
             end
 
             if v.is_file_loaded
+                #### перенести на плюсы
                 CImGui.SameLine(1664)
                 if CImGui.Button("Очистить выбор (новое заключение)")
                     v.current_item = fill("", length(v.data[2])+1)
                     v.is_group_selected = false
                     v.final = ""
                 end
+                ####
                 if CImGui.BeginCombo("Группы ритмов", v.current_item[1])
                     for i in 1:length(v.data[1])
                         isselected = (v.data[1][i].name == v.current_item[1])
@@ -155,6 +157,7 @@
                         end
                         CImGui.EndCombo()
                     end
+                    #### перенести на плюсы
                     if v.current_item[i+1] != ""
                         CImGui.PushID(v.data[2][i].name)
                             CImGui.SameLine()
@@ -164,37 +167,21 @@
                             end
                         CImGui.PopID()
                     end
+                    ####
                 end
             end
 
+            #### перенести на плюсы
             if v.is_file_loaded
                 CImGui.Separator()
                 if CImGui.TreeNode("Поле добавления пользовательских фраз")
                     @cstatic phrase="\0"^500 begin
                         @cstatic selection = fill(false, 9) begin
-                        CImGui.Text("Введите новую фразу")
-                        CImGui.InputText("##1", phrase, length(phrase))
+                            CImGui.Text("Введите новую фразу: ")
+                            CImGui.InputText("##1", phrase, length(phrase))
 
-                        CImGui.SameLine()
-                        if CImGui.Button("Добавить фразу")
-                            open(v.filename, "a+") do io
-                                write(io, "\n"*"    "*replace(v.newphrase, "\0" => ""))
-                            end   
-                            phrase = "\0"^500
-                            selection = fill(false, 9)
-                            warn_dialog("Новая фраза добавлена в раздел `Пользовательские фразы'.")
-
-                            v.data = parsetxt.my_txtparser(v.filename)
-                        end
-
-                        if CImGui.TreeNode("Выберите группы ритмов, для которых фраза будет запрещена:")
-                                window_flags = CImGui.ImGuiWindowFlags_HorizontalScrollbar
-                                CImGui.BeginChild("Child1", ImVec2(CImGui.GetWindowContentRegionWidth() * 0.5, 260), false, window_flags)
-                                    for i in 1:length(v.data[1])
-                                        CImGui.Selectable(v.data[1][i].name, pointer(selection)+(i-1)*sizeof(Bool))
-                                    end
-                                CImGui.EndChild()
-
+                            CImGui.SameLine()
+                            if CImGui.Button("Добавить фразу")
                                 code = ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
                                 for i in 1:length(selection)
                                     if !selection[i]
@@ -217,16 +204,34 @@
                                 else
                                     v.newphrase = phrase*" : "*ban
                                 end
+
+                                open(v.filename, "a+") do io
+                                    write(io, "\n"*"    "*replace(v.newphrase, "\0" => ""))
+                                end   
+                                phrase = "\0"^500
+                                selection = fill(false, 9)
+                                warn_dialog("Новая фраза добавлена в раздел `Пользовательские фразы'.")
+
+                                v.data = parsetxt.my_txtparser(v.filename)
+                            end
+
+                            if CImGui.TreeNode("Выберите группы ритмов, для которых фраза будет запрещена:")
+                                window_flags = CImGui.ImGuiWindowFlags_HorizontalScrollbar
+                                CImGui.BeginChild("Child1", ImVec2(CImGui.GetWindowContentRegionWidth() * 0.4, 100), false, window_flags)
+                                    for i in 1:length(v.data[1])
+                                        CImGui.Selectable(v.data[1][i].name, pointer(selection)+(i-1)*sizeof(Bool))
+                                    end
+                                CImGui.EndChild()
                             end
                         end
-
                     end
                 end
             end
+            ####
 
         CImGui.End()
 
-        CImGui.SetNextWindowPos(ImVec2(0, 1005))
+        CImGui.SetNextWindowPos(ImVec2(0, 960))
         CImGui.SetNextWindowSize(ImVec2(2100,650))
         CImGui.Begin("Заключение")
             CImGui.BulletText("Поле с заключением доступно для редактирования.")
@@ -248,7 +253,7 @@
         Renderer.render(
             ()->ui(state),
             width=2100,
-            height=1620,
+            height=1570,
             title=""
         )
     end
