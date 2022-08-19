@@ -122,19 +122,6 @@ function ui(v::Global)
                                         v.current_item[1][j] = false
                                     end
                                 end
-                                ### сделать функцией, чтобы можно было юзать в двух местах (для тех трёх диагнозов)
-                                # for j in 2:length(v.current_item)
-                                #     needclean = false
-                                #     for k in 1:length(v.data[2][j-1].children)
-                                #         if v.data[2][j-1].children[k].name == v.current_item[j]
-                                #             needclean = (typeof(findfirst(x -> x == v.data[1][i].code, v.data[2][j-1].children[k].ban)) != Nothing)
-                                #         end
-                                #     end
-                                #     if needclean
-                                #         v.current_item[j] = ""
-                                #     end
-                                # end
-                                # v.final = makeconclusion(v)
                             end
                         if v.current_item[1][i]
                             CImGui.SetItemDefaultFocus()
@@ -177,6 +164,8 @@ function ui(v::Global)
                                     if v.current_item[i+1][j]
                                         CImGui.SetItemDefaultFocus()
                                     end
+                                else
+                                    v.current_item[i+1][j] = false
                                 end
                             end
                         CImGui.EndChild()
