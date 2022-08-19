@@ -123,9 +123,6 @@ function ui(v::Global)
                                     end
                                 end
                             end
-                        if v.current_item[1][i]
-                            CImGui.SetItemDefaultFocus()
-                        end
                     end
                 CImGui.EndChild()
             end
@@ -139,6 +136,13 @@ function ui(v::Global)
                             CImGui.PushID(v.data[2][i].name)
                                 if CImGui.SmallButton("очистить поле")
                                     v.current_item[i+1] = fill(false, length(v.current_item[i+1]))
+                                end
+                                for j in 1:length(v.data[2][i].children)
+                                    for k in length(v.data[1]):-1:length(v.data[1])-2
+                                        if v.data[2][i].children[j].name == v.data[1][k].name
+                                            v.current_item[1][k] = v.current_item[i+1][j]
+                                        end
+                                    end
                                 end
                             CImGui.PopID()
                         end
@@ -160,9 +164,6 @@ function ui(v::Global)
                                                 v.current_item[1][k] = v.current_item[i+1][j]
                                             end
                                         end
-                                    end
-                                    if v.current_item[i+1][j]
-                                        CImGui.SetItemDefaultFocus()
                                     end
                                 else
                                     v.current_item[i+1][j] = false
