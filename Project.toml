@@ -1,3 +1,8 @@
+name = "DiagnosisHelper"
+uuid = "7860aaff-4702-4d7a-825d-22cf6f91cb69"
+authors = ["Sukhoverkhaya <90982979+Sukhoverkhaya@users.noreply.github.com> and contributors"]
+version = "0.1.0"
+
 [deps]
 CImGui = "5d785b6c-b76f-510e-a07c-3070796c7e87"
 CSyntax = "ea656a56-6ca6-5dda-bba5-7b6963a5f74c"
@@ -6,4 +11,16 @@ ImPlot = "e8efc688-5342-4ad4-b4ba-9025a731b363"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
 PackageCompiler = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
+PkgTemplates = "14b8a8f1-9102-5b29-a752-f990bacb7fe1"
 Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
+
+
