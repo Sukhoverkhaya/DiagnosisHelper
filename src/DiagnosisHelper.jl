@@ -370,8 +370,7 @@ function ui(v::Global)
         end
 
         CImGui.BeginChild("txt2", ImVec2(CImGui.GetWindowContentRegionWidth() * 0.37, 600), false)
-            hist = v.history
-            CImGui.InputTextMultiline("##2", hist, length(hist)+1, ImVec2(-1.0, CImGui.GetTextLineHeight() * 20), CImGui.ImGuiInputTextFlags_AllowTabInput)
+            CImGui.InputTextMultiline("##2", v.history, length(v.history)+1, ImVec2(-1.0, CImGui.GetTextLineHeight() * 20), CImGui.ImGuiInputTextFlags_AllowTabInput)
         CImGui.EndChild()
 
         CImGui.SameLine()
