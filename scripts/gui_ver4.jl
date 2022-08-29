@@ -15,6 +15,7 @@ using .parsetxt2
 
 mutable struct Global
     filename::String
+    history_filename::String
     data::Vector{Any}
     is_file_loaded::Bool
     current_item::Vector{Vector{Bool}}
@@ -27,9 +28,12 @@ mutable struct Global
     bans::Vector{String}
     history::String
     is_text_hovered::Bool
+    tab_item::Int64
+    all_history::String
 
     function Global()
-        filename = ""
+        filename = "configs/newtxt.txt"
+        history_filename = "configs/history.txt"
         data = []
         is_file_loaded = false
         current_item = []
@@ -42,8 +46,10 @@ mutable struct Global
         bans = []
         history = ""
         is_text_hovered = false
+        tab_item = 1
+        all_history = ""
 
-        new(filename, data, is_file_loaded, current_item, is_rhytm_selected, final, newphrase, collapsingstate, conclusion, append, bans, history, is_text_hovered)
+        new(filename, history_filename, data, is_file_loaded, current_item, is_rhytm_selected, final, newphrase, collapsingstate, conclusion, append, bans, history, is_text_hovered, tab_item, all_history)
     end
 end
 
@@ -105,45 +111,64 @@ end
 
 function ConclusionWindow(v::Global) # Окно с историей и заключением
     CImGui.SetNextWindowPos(ImVec2(0, 950))
-    CImGui.SetNextWindowSize(ImVec2(3840,720))
+    CImGui.SetNextWindowSize(ImVec2(1700,720))
     CImGui.Begin("Заключение")
 
-        CImGui.SameLine(CImGui.GetWindowContentRegionWidth() * 0.17)
-        CImGui.Text("История")
+        if CImGui.BeginTabBar("MyTabBar", CImGui.ImGuiTabBarFlags_None)
+            if CImGui.BeginTabItem("Заключение")
 
-        CImGui.SameLine(CImGui.GetWindowContentRegionWidth() * 0.54)
-        CImGui.Text("Заключение")
+                v.tab_item = 1
 
-        CImGui.SameLine(CImGui.GetWindowContentRegionWidth() * 0.37+30)
+                CImGui.EndTabItem()
+            end
+            if CImGui.BeginTabItem("История")
+
+                v.tab_item = 2
+
+                CImGui.EndTabItem()
+            end
+            CImGui.EndTabBar()
+        end
+
+        CImGui.SameLine(CImGui.GetWindowContentRegionWidth() * 0.3)
         ShowHelpMarker("1. Сформируйте заключение из набора фраз, представленных в меню (на этом этапе заключение динамически изменяется)."*
                     "\n"*"Если необходимо дополнить заключение вручную:"*
                     "\n"*"   1. Проверьте выбр фраз, т.к. после ручной коррекции возможно будет только удаление фраз вручную."*
                     "\n"*"   2. Дополните заключение, вводя текст вручную."*
                     "\n"*"Если после ручной коррекции выбр фраз из меню будет изменен, динамически изменяемый блок дополнительных фраз будет добавлен в конец заключения.")
      
-
-        CImGui.SameLine(2550)
-        if CImGui.Button("Копировать заключение")
-            clipboard(replace(v.final, "\0" => "", "\n" => "" ))
+        CImGui.SameLine(CImGui.GetWindowContentRegionWidth() * 0.68)
+        if CImGui.Button("Сохранить в историю")
             v.history *= "\n" * replace(v.final, "\0" => "" ) * "\n" * "_"^100 * "\n"
+            open(v.history_filename, "a+") do io
+                write(io, v.history)
+            end
+            v.all_history = parsetxt2.my_txtparser2(v.history_filename,"history")   
         end
 
-        CImGui.BeginChild("txt2", ImVec2(CImGui.GetWindowContentRegionWidth() * 0.37, 600), false)
-            CImGui.InputTextMultiline("##2", v.history, length(v.history)+1, ImVec2(-1.0, CImGui.GetTextLineHeight() * 20), CImGui.ImGuiInputTextFlags_AllowTabInput)
-        CImGui.EndChild()
+        CImGui.SameLine(CImGui.GetWindowContentRegionWidth() * 0.84)
+        if CImGui.Button("Копировать заключение")
+            clipboard(replace(v.final, "\0" => "", "\n" => "" ))
+        end
 
-        CImGui.SameLine()
-        CImGui.BeginChild("txt1", ImVec2(CImGui.GetWindowContentRegionWidth() * 0.37, 600), false)
-            CImGui.InputTextMultiline("##1", v.final, 10000, ImVec2(-1.0, CImGui.GetTextLineHeight() * 20), CImGui.ImGuiInputTextFlags_AllowTabInput)
-            if CImGui.IsItemHovered()
-                v.is_text_hovered = true
-                v.collapsingstate = fill(false, length(v.collapsingstate))
-                v.current_item = []
-                for i in 1:length(v.data)
-                    push!(v.current_item, fill(false, length(v.data[i].children)))
+        if v.tab_item == 2
+            CImGui.BeginChild("txt2", ImVec2(CImGui.GetWindowContentRegionWidth(), 600), false)
+                CImGui.InputTextMultiline("##2", v.all_history, length(v.all_history)+1, ImVec2(-1.0, CImGui.GetTextLineHeight() * 20), CImGui.ImGuiInputTextFlags_AllowTabInput)
+            CImGui.EndChild()
+        elseif v.tab_item == 1
+            CImGui.BeginChild("txt1", ImVec2(CImGui.GetWindowContentRegionWidth(), 600), false)
+                CImGui.InputTextMultiline("##1", v.final, 10000, ImVec2(-1.0, CImGui.GetTextLineHeight() * 20), CImGui.ImGuiInputTextFlags_AllowTabInput)
+                if CImGui.IsItemHovered()
+                    v.is_text_hovered = true
+                    v.collapsingstate = fill(false, length(v.collapsingstate))
+                    v.current_item = []
+                    for i in 1:length(v.data)
+                        push!(v.current_item, fill(false, length(v.data[i].children)))
+                    end
                 end
-            end
-        CImGui.EndChild()
+            CImGui.EndChild()
+        end
+
     CImGui.End()
 end
 
@@ -151,52 +176,21 @@ function AddPhrase(v::Global) # Раздел добавления фраз
     CImGui.Separator()
     if CImGui.TreeNode("Поле добавления пользовательских фраз")
         @cstatic phrase="\0"^500 begin
-            @cstatic selection = fill(false, 9) begin
-                CImGui.Text("Введите новую фразу: ")
-                CImGui.InputText("##1", phrase, length(phrase))
+            CImGui.Text("Введите новую фразу: ")
+            CImGui.InputText("##3", phrase, length(phrase))
+            CImGui.SameLine()
+            if CImGui.Button("Добавить фразу")
+                v.newphrase = phrase
+                open(v.filename, "a+") do io
+                    write(io, "\n"*"    "*replace(v.newphrase, "\0" => ""))
+                end   
+                phrase = "\0"^500
+                warn_dialog("Новая фраза добавлена в раздел `Пользовательские фразы'.")
 
-                CImGui.SameLine()
-                if CImGui.Button("Добавить фразу")
-                    code = ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
-                    for i in 1:lastindex(selection)
-                        if !selection[i]
-                            code[i] = "remove"
-                        end
-                    end
-                    filter!(e -> e! = "remove", code)
-                    if length(code) == 0
-                        ban = ""
-                    elseif length(code) == 1
-                        ban = code[1]
-                    else
-                        ban = code[1]
-                        for i in 2:lastindex(code)
-                            ban *= ", "*code[i]
-                        end
-                    end
-                    if ban == ""
-                        v.newphrase = phrase
-                    else
-                        v.newphrase = phrase*" : "*ban
-                    end
-
-                    open(v.filename, "a+") do io
-                        write(io, "\n"*"    "*replace(v.newphrase, "\0" => ""))
-                    end   
-                    phrase = "\0"^500
-                    selection = fill(false, 9)
-                    warn_dialog("Новая фраза добавлена в раздел `Пользовательские фразы'.")
-
-                    v.data = parsetxt.my_txtparser(v.filename)
-                end
-
-                if CImGui.TreeNode("Выберите группы ритмов, для которых фраза будет запрещена:")
-                    window_flags = gCImGui.ImGuiWindowFlags_HorizontalScrollbar
-                    CImGui.BeginChild("Child1", ImVec2(CImGui.GetWindowContentReionWidth() * 0.4, 100), false, window_flags)
-                        for i in 1:length(v.data[1])
-                            CImGui.Selectable(v.data[1][i].name, pointer(selection)+(i-1)*sizeof(Bool))
-                        end
-                    CImGui.EndChild()
+                v.data = parsetxt2.my_txtparser2(v.filename, "data")
+                v.current_item = []
+                for i in 1:length(v.data)
+                    push!(v.current_item, fill(false, length(v.data[i].children)))
                 end
             end
         end
@@ -217,33 +211,29 @@ function CleanButton(v::Global) # Кнопка полной очистки за�
     end
 end
 
-function LoadButton(v::Global) # Кнопка загрузки файла
-    if CImGui.Button("Загрузить файл")
-        v.filename = open_dialog_native("Выберите файл", GtkNullContainer(), ("*.txt",))
-        if isempty(v.filename)
-            warn_dialog("Файл не выбран!")
-            v.is_file_loaded = false
-        else
-            v.data = parsetxt2.my_txtparser2(v.filename)
-            v.current_item = []
-            for i in 1:length(v.data)
-                push!(v.current_item, fill(false, length(v.data[i].children)))
-            end
-            v.collapsingstate = fill(false, length(v.current_item))
-            v.is_file_loaded = true
+function Load(v::Global) # Загрузка файла
+    if !v.is_file_loaded
+        v.data = parsetxt2.my_txtparser2(v.filename, "data")
+        v.current_item = []
+        for i in 1:length(v.data)
+            push!(v.current_item, fill(false, length(v.data[i].children)))
         end
+        v.collapsingstate = fill(false, length(v.current_item))
+        v.is_file_loaded = true
+
+        v.all_history = parsetxt2.my_txtparser2(v.history_filename, "history")
     end
 end
 
 function Menu(v::Global) # Окно меню
     CImGui.SetNextWindowPos(ImVec2(0,0))
-    CImGui.SetNextWindowSize(ImVec2(3840,955))
+    CImGui.SetNextWindowSize(ImVec2(1700,955))
     CImGui.Begin("Меню")
-        
-        LoadButton(v)
+
+        Load(v)
 
         if v.is_file_loaded
-            CImGui.SameLine(2450)
+            CImGui.SameLine(1270)
             CleanButton(v)
 
             for i in 1:length(v.data)
@@ -307,13 +297,13 @@ function makeconclusion(v::Global, i_curr::Int64, j_curr::Int64) # Создан�
         if  i == 5
             for j in 1:length(v.current_item[i])
                 if v.current_item[i][j]
-                    X *= v.data[i].children[j].name
+                    Y = lowercasefirst(v.data[i].children[j].name)
                 end
             end
         elseif i == 6
             for j in 1:length(v.current_item[i])
                 if v.current_item[i][j]
-                    Y = lowercasefirst(v.data[i].children[j].name)
+                    X *= v.data[i].children[j].name
                 end
             end
             if Y != " " && X != "В отведениях "
@@ -368,6 +358,8 @@ function setcollapsing(v::Global, i::Int) # Закрытие все полей �
     for j in 1:length(v.collapsingstate)
         if j == i == 1
             v.collapsingstate[j] = true
+        elseif j == i == 6 && sizeof(findall(v.current_item[5])) == 0
+            v.collapsingstate[j] = false
         elseif j == i != 1 && sizeof(findall(v.current_item[1])) != 0
             v.collapsingstate[j] = true
         elseif j == i != 1 && sizeof(findall(v.current_item[1])) == 0
@@ -388,8 +380,8 @@ function show_gui()
     state = Global();
     Renderer.render(
         ()->ui(state),
-        width=500,
-        height=500,
+        width=1700,
+        height=1750,
         title=""
     )
 end

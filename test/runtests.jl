@@ -2,5 +2,5 @@ using DiagnosisHelper
 using Test
 
 @testset "DiagnosisHelper.jl" begin
-    # Write your tests here.
+    DiagnosisHelper.show_gui()
 end

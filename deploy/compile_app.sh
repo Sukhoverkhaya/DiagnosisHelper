@@ -10,5 +10,4 @@ PackageCompiler.create_app(pwd(), "MyProjectCompiled";
     filter_stdlibs=true,
     precompile_execution_file=["test/runtests.jl"])
 '
-
 # PackageCompiler.create_app(pwd(), "HotBoxCompiled"; filter_stdlibs=true, precompile_execution_file=["scripts/newgui.jl"])
