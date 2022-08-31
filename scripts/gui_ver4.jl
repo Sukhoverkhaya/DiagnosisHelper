@@ -26,7 +26,6 @@ mutable struct Global
     conclusion::String
     append::Bool
     bans::Vector{String}
-    history::String
     is_text_hovered::Bool
     tab_item::Int64
     all_history::String
@@ -44,12 +43,11 @@ mutable struct Global
         conclusion = ""
         append = false
         bans = []
-        history = ""
         is_text_hovered = false
         tab_item = 1
         all_history = ""
 
-        new(filename, history_filename, data, is_file_loaded, current_item, is_rhytm_selected, final, newphrase, collapsingstate, conclusion, append, bans, history, is_text_hovered, tab_item, all_history)
+        new(filename, history_filename, data, is_file_loaded, current_item, is_rhytm_selected, final, newphrase, collapsingstate, conclusion, append, bans, is_text_hovered, tab_item, all_history)
     end
 end
 
@@ -62,9 +60,9 @@ function CH(v::Global, i::Int64) # Создание каждого раздел�
                 if CImGui.SmallButton("очистить поле")
                     for k in 1:length(v.current_item[i])
                         if v.current_item[i][k]
-                            for k in 1:length(v.bans)
-                                if v.bans[k] == v.data[i].children[k].will_ban
-                                    v.bans[k] = "remove"
+                            for t in 1:length(v.bans)
+                                if v.bans[t] == v.data[i].children[t].will_ban
+                                    v.bans[t] = "remove"
                                     break
                                 end
                             end
@@ -139,9 +137,9 @@ function ConclusionWindow(v::Global) # Окно с историей и закл�
      
         CImGui.SameLine(CImGui.GetWindowContentRegionWidth() * 0.68)
         if CImGui.Button("Сохранить в историю")
-            v.history *= "\n" * replace(v.final, "\0" => "" ) * "\n" * "_"^100 * "\n"
+            history = "\n" * replace(v.final, "\0" => "" ) * "\n" * "_"^100 * "\n"
             open(v.history_filename, "a+") do io
-                write(io, v.history)
+                write(io, history)
             end
             v.all_history = parsetxt2.my_txtparser2(v.history_filename,"history")   
         end
@@ -158,7 +156,7 @@ function ConclusionWindow(v::Global) # Окно с историей и закл�
         elseif v.tab_item == 1
             CImGui.BeginChild("txt1", ImVec2(CImGui.GetWindowContentRegionWidth(), 600), false)
                 CImGui.InputTextMultiline("##1", v.final, 10000, ImVec2(-1.0, CImGui.GetTextLineHeight() * 20), CImGui.ImGuiInputTextFlags_AllowTabInput)
-                if CImGui.IsItemHovered()
+                if CImGui.IsItemClicked()
                     v.is_text_hovered = true
                     v.collapsingstate = fill(false, length(v.collapsingstate))
                     v.current_item = []
@@ -341,7 +339,7 @@ function makeconclusion(v::Global, i_curr::Int64, j_curr::Int64) # Создан�
     end
 
     if v.append
-        full = replace(v.conclusion, "\0" => "") * "\n" *full
+        full = replace(v.conclusion, "\0" => "") * "\n" * full
     elseif !v.append && i_curr != 1
         v.conclusion = conclusion
         full = full*"\n"*"    "
