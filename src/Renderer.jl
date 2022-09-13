@@ -9,6 +9,18 @@ using CImGui.ImGuiOpenGLBackend.ModernGL
 using ImPlot
 using CImGui.CSyntax
 
+mutable struct GR
+    h::Int
+    w:: Int
+
+    function GR()
+        h = 0
+        w = 0
+
+        new(h, w)
+    end
+end
+
 function __init__()
     @static if Sys.isapple()
         # OpenGL 3.2 + GLSL 150
@@ -75,7 +87,7 @@ function init_renderer(width, height, title::AbstractString)
     return window, ctx, glfw_ctx, opengl_ctx
 end
 
-function renderloop(window, ctx, glfw_ctx, opengl_ctx, ui=()->nothing, hotloading=false)
+function renderloop(v, window, ctx, glfw_ctx, opengl_ctx, ui=()->nothing, hotloading=false)
     try
         while glfwWindowShouldClose(window) == 0
             glfwPollEvents()
@@ -92,6 +104,9 @@ function renderloop(window, ctx, glfw_ctx, opengl_ctx, ui=()->nothing, hotloadin
             glfwGetFramebufferSize(window, width, height)
             display_w = width[]
             display_h = height[]
+
+            v.w = display_w
+            v.h = display_h
 
             glViewport(0, 0, display_w, display_h)
             glClearColor(0.2, 0.2, 0.2, 1)
@@ -113,10 +128,10 @@ function renderloop(window, ctx, glfw_ctx, opengl_ctx, ui=()->nothing, hotloadin
     end
 end
 
-function render(ui; width=1280, height=720, title::AbstractString="Demo", hotloading=false)
+function render(ui; width=1280, height=720, title::AbstractString="Demo", v, hotloading=false)
     window, ctx, glfw_ctx, opengl_ctx = init_renderer(width, height, title)
     GC.@preserve window ctx begin
-        t = @async renderloop(window, ctx, glfw_ctx, opengl_ctx, ui, hotloading)
+        t = @async renderloop(v, window, ctx, glfw_ctx, opengl_ctx, ui, hotloading)
     end
     return t
 end

@@ -107,9 +107,9 @@ function CH(v::Global, i::Int64) # Создание каждого раздел�
     end
 end
 
-function ConclusionWindow(v::Global) # Окно с историей и заключением
-    CImGui.SetNextWindowPos(ImVec2(0, 950))
-    CImGui.SetNextWindowSize(ImVec2(1700,720))
+function ConclusionWindow(v::Global, s::Renderer.GR) # Окно с историей и заключением
+    CImGui.SetNextWindowPos(ImVec2(0, s.h/1.75))
+    CImGui.SetNextWindowSize(ImVec2(s.w, s.h/1.75))
     CImGui.Begin("Заключение")
 
         if CImGui.BeginTabBar("MyTabBar", CImGui.ImGuiTabBarFlags_None)
@@ -128,14 +128,14 @@ function ConclusionWindow(v::Global) # Окно с историей и закл�
             CImGui.EndTabBar()
         end
 
-        CImGui.SameLine(CImGui.GetWindowContentRegionWidth() * 0.3)
+        CImGui.SameLine(s.w - 1000)
         ShowHelpMarker("1. Сформируйте заключение из набора фраз, представленных в меню (на этом этапе заключение динамически изменяется)."*
                     "\n"*"Если необходимо дополнить заключение вручную:"*
                     "\n"*"   1. Проверьте выбр фраз, т.к. после ручной коррекции возможно будет только удаление фраз вручную."*
                     "\n"*"   2. Дополните заключение, вводя текст вручную."*
                     "\n"*"Если после ручной коррекции выбр фраз из меню будет изменен, динамически изменяемый блок дополнительных фраз будет добавлен в конец заключения.")
      
-        CImGui.SameLine(CImGui.GetWindowContentRegionWidth() * 0.68)
+        CImGui.SameLine(s.w - 600)
         if CImGui.Button("Сохранить в историю")
             history = "\n" * replace(v.final, "\0" => "" ) * "\n" * "_"^100 * "\n"
             open(v.history_filename, "a+") do io
@@ -144,7 +144,7 @@ function ConclusionWindow(v::Global) # Окно с историей и закл�
             v.all_history = parsetxt2.my_txtparser2(v.history_filename,"history")   
         end
 
-        CImGui.SameLine(CImGui.GetWindowContentRegionWidth() * 0.84)
+        CImGui.SameLine(s.w - 300)
         if CImGui.Button("Копировать заключение")
             clipboard(replace(v.final, "\0" => "", "\n" => "" ))
         end
@@ -223,15 +223,14 @@ function Load(v::Global) # Загрузка файла
     end
 end
 
-function Menu(v::Global) # Окно меню
+function Menu(v::Global, s::Renderer.GR) # Окно меню
     CImGui.SetNextWindowPos(ImVec2(0,0))
-    CImGui.SetNextWindowSize(ImVec2(1700,955))
+    CImGui.SetNextWindowSize(ImVec2(s.w, s.h/1.75))
     CImGui.Begin("Меню")
-
         Load(v)
 
         if v.is_file_loaded
-            CImGui.SameLine(1270)
+            CImGui.SameLine(s.w-450)
             CleanButton(v)
 
             for i in 1:length(v.data)
@@ -368,19 +367,21 @@ function setcollapsing(v::Global, i::Int) # Закрытие все полей �
     end
 end
 
-function ui(v::Global) # Главная функция
+function ui(v::Global, s::Renderer.GR) # Главная функция
     CImGui.StyleColorsLight()
-    Menu(v)
-    ConclusionWindow(v)
+    Menu(v, s)
+    ConclusionWindow(v, s)
 end
 
 function show_gui()
     state = Global();
+    size = Renderer.GR();
     Renderer.render(
-        ()->ui(state),
+        ()->ui(state, size),
         width=1700,
         height=1750,
-        title=""
+        title="",
+        v = size
     )
 end
 
