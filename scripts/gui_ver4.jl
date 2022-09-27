@@ -29,6 +29,8 @@ mutable struct Global
     is_text_hovered::Bool
     tab_item::Int64
     all_history::String
+    combo_item::String
+    isselected::Bool
 
     function Global()
         filename = "configs/newtxt.txt"
@@ -46,8 +48,11 @@ mutable struct Global
         is_text_hovered = false
         tab_item = 1
         all_history = ""
+        combo_item = ""
 
-        new(filename, history_filename, data, is_file_loaded, current_item, is_rhytm_selected, final, newphrase, collapsingstate, conclusion, append, bans, is_text_hovered, tab_item, all_history)
+        new(filename, history_filename, data, is_file_loaded, current_item, 
+        is_rhytm_selected, final, newphrase, collapsingstate, conclusion, 
+        append, bans, is_text_hovered, tab_item, all_history, combo_item)
     end
 end
 
@@ -80,7 +85,7 @@ function CH(v::Global, i::Int64) # Создание каждого раздел�
                 is_banned = false
                 for k in 1:length(v.bans)
                     is_banned = (typeof(findfirst(x -> x == v.bans[k], v.data[i].children[j].banned_by)) != Nothing)
-                    break
+                    if is_banned break end
                 end
 
                 if !is_banned
@@ -128,7 +133,7 @@ function ConclusionWindow(v::Global, s::Renderer.GR) # Окно с истори�
             CImGui.EndTabBar()
         end
 
-        CImGui.SameLine(s.w - 1000)
+        CImGui.SameLine(s.w - 750)
         ShowHelpMarker("1. Сформируйте заключение из набора фраз, представленных в меню (на этом этапе заключение динамически изменяется)."*
                     "\n"*"Если необходимо дополнить заключение вручную:"*
                     "\n"*"   1. Проверьте выбр фраз, т.к. после ручной коррекции возможно будет только удаление фраз вручную."*
@@ -151,12 +156,13 @@ function ConclusionWindow(v::Global, s::Renderer.GR) # Окно с истори�
 
         if v.tab_item == 2
             CImGui.BeginChild("txt2", ImVec2(CImGui.GetWindowContentRegionWidth(), 600), false)
-                CImGui.InputTextMultiline("##2", v.all_history, length(v.all_history)+1, ImVec2(-1.0, CImGui.GetTextLineHeight() * 20), CImGui.ImGuiInputTextFlags_AllowTabInput)
+                CImGui.InputTextMultiline("##2", v.all_history, length(v.all_history)+1, ImVec2(-1.0, CImGui.GetTextLineHeight() * 20), CImGui.ImGuiInputTextFlags_ReadOnly)
             CImGui.EndChild()
         elseif v.tab_item == 1
             CImGui.BeginChild("txt1", ImVec2(CImGui.GetWindowContentRegionWidth(), 600), false)
                 CImGui.InputTextMultiline("##1", v.final, 10000, ImVec2(-1.0, CImGui.GetTextLineHeight() * 20), CImGui.ImGuiInputTextFlags_AllowTabInput)
                 if CImGui.IsItemClicked()
+                    print("yo")
                     v.is_text_hovered = true
                     v.collapsingstate = fill(false, length(v.collapsingstate))
                     v.current_item = []
@@ -170,28 +176,69 @@ function ConclusionWindow(v::Global, s::Renderer.GR) # Окно с истори�
     CImGui.End()
 end
 
-function AddPhrase(v::Global) # Раздел добавления фраз
-    CImGui.Separator()
-    if CImGui.TreeNode("Поле добавления пользовательских фраз")
-        @cstatic phrase="\0"^500 begin
+function RewriteTXT(v::Global)
+end
+
+# function DeletePhraseButton(v::Global)
+#     CImGui.SameLine()
+#     if CImGui.Button("Удалить фразу")
+#         for i in 1:length(v.data[length(v.data)].children)
+#             if v.data[length(v.data)].children[i].name == v.combo_item
+#                 filter!(x -> x v.data[length(v.data)].children[i].name, a)
+#                 break
+#             end
+#         end
+#     end
+# end
+
+function AddUserPhrase(v::Global, phrase::String)
+    if CImGui.Button("Добавить фразу")
+        v.newphrase = phrase
+        open(v.filename, "a+") do io
+            write(io, "\n"*"    "*replace(v.newphrase, "\0" => ""))
+        end   
+        phrase = "\0"^500
+        warn_dialog("Новая фраза добавлена в раздел `Пользовательские фразы'.")
+
+        v.data = parsetxt2.my_txtparser2(v.filename, "data")
+        v.current_item = []
+        for i in 1:length(v.data)
+            push!(v.current_item, fill(false, length(v.data[i].children)))
+        end
+    end
+end
+
+function UserPhraseCombo(v::Global)
+    CImGui.NewLine()
+    CImGui.Text("Выберите фразу для удаления:")
+    if CImGui.BeginCombo("##uf", v.combo_item)
+        for i in 1:length(v.data[length(v.data)].children)
+            isselected = (v.data[length(v.data)].children[i].name == v.combo_item)
+            if CImGui.Selectable(v.data[length(v.data)].children[i].name, isselected)
+                v.combo_item = v.data[length(v.data)].children[i].name
+            end
+        end
+        CImGui.EndCombo()
+    end
+
+    DeletePhraseButton(v)
+end
+
+function UserPhraseInput(v::Global)
+    @cstatic phrase="\0"^500 begin
             CImGui.Text("Введите новую фразу: ")
             CImGui.InputText("##3", phrase, length(phrase))
             CImGui.SameLine()
-            if CImGui.Button("Добавить фразу")
-                v.newphrase = phrase
-                open(v.filename, "a+") do io
-                    write(io, "\n"*"    "*replace(v.newphrase, "\0" => ""))
-                end   
-                phrase = "\0"^500
-                warn_dialog("Новая фраза добавлена в раздел `Пользовательские фразы'.")
 
-                v.data = parsetxt2.my_txtparser2(v.filename, "data")
-                v.current_item = []
-                for i in 1:length(v.data)
-                    push!(v.current_item, fill(false, length(v.data[i].children)))
-                end
-            end
+            AddUserPhrase(v, phrase)
         end
+end
+
+function AddPhrase(v::Global) # Раздел добавления фраз
+    CImGui.Separator()
+    if CImGui.TreeNode("Поле добавления пользовательских фраз")
+        UserPhraseInput(v)
+        UserPhraseCombo(v)
     end
 end
 
@@ -351,7 +398,7 @@ function makeconclusion(v::Global, i_curr::Int64, j_curr::Int64) # Создан�
     return final
 end
 
-function setcollapsing(v::Global, i::Int) # Закрытие все полей меню, кроме выбранного
+function setcollapsing(v::Global, i::Int) # Закрытие всех полей меню, кроме выбранного
     for j in 1:length(v.collapsingstate)
         if j == i == 1
             v.collapsingstate[j] = true
